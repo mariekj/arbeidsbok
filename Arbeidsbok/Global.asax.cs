@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using System.Transactions;
 using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+using Raven.Client;
+using StructureMap;
 
 namespace Arbeidsbok
 {
@@ -17,6 +16,7 @@ namespace Arbeidsbok
         public static void RegisterGlobalFilters(GlobalFilterCollection filters)
         {
             filters.Add(new HandleErrorAttribute());
+            filters.Add(new TransactionFilter());
         }
 
         public static void RegisterRoutes(RouteCollection routes)
@@ -44,6 +44,26 @@ namespace Arbeidsbok
             RegisterRoutes(RouteTable.Routes);
 
             BundleTable.Bundles.RegisterTemplateBundles();
+
+            var container = IoC.Initialize();
+            DependencyResolver.SetResolver(new SmDependencyResolver(container));
+        }
+    }
+
+    public class TransactionFilter : IActionFilter
+    {
+        private TransactionScope _transaction;
+
+        public void OnActionExecuting(ActionExecutingContext filterContext)
+        {
+            _transaction = new TransactionScope();
+        }
+
+        public void OnActionExecuted(ActionExecutedContext filterContext)
+        {
+            ObjectFactory.GetInstance<IDocumentSession>().SaveChanges();
+            _transaction.Complete();
+            _transaction.Dispose();
         }
     }
 }

@@ -6,8 +6,7 @@ using StructureMap;
 namespace Arbeidsbok.App_Start {
     public static class StructuremapMvc {
         public static void Start() {
-            var container = (IContainer) IoC.Initialize();
-            DependencyResolver.SetResolver(new SmDependencyResolver(container));
+
         }
     }
 }
